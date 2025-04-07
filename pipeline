@@ -38,7 +38,38 @@ pipeline {
         }
 
         // -----------------------------
-        // 4. DEPLOY
+        // 4. SECURITY SCAN (Trivy)
+        // -----------------------------
+        stage('Scan Docker Image with Trivy') {
+    steps {
+        script {
+            // Run Trivy scan and store output
+            def scanStatus = sh(script: '''
+                trivy image --severity LOW,MEDIUM,CRITICAL --format table --output trivy-report.txt $IMAGE_NAME || true
+                grep -q 'CRITICAL' trivy-report.txt && echo "CRITICAL_FOUND" || echo "NO_CRITICAL"
+            ''', returnStdout: true).trim()
+
+            // Show scan report in console
+            sh 'cat trivy-report.txt'
+
+            // Archive report
+            archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
+
+            // If CRITICAL vulnerabilities are found, require manual approval
+            if (scanStatus == 'CRITICAL_FOUND') {
+                echo "CRITICAL vulnerabilities found! Manual approval required to proceed."
+
+                input message: 'CRITICAL vulnerabilities found. Do you want to continue?', ok: 'Approve and Proceed'
+            } else {
+                echo "No CRITICAL vulnerabilities found. Proceeding..."
+            }
+        }
+    }
+}
+
+
+        // -----------------------------
+        // 5. DEPLOY
         // -----------------------------
         stage('Run Docker Container') {
             steps {
