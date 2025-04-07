@@ -8,7 +8,7 @@ const initialBoards = [
     id: 'board-1',
     title: 'To Do',
     cards: [
-      { id: 'card-1', text: 'Fix login bug' },
+      { id: 'card-1', text: 'Fix bug' },
       { id: 'card-2', text: 'Update documentation' },
     ],
   },
