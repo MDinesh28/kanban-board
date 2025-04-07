@@ -8,27 +8,45 @@ pipeline {
     }
 
     stages {
+        // -----------------------------
+        // 1. SOURCE CODE MANAGEMENT
+        // -----------------------------
         stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/MDinesh28/kanban-board.git'
             }
         }
 
+        // -----------------------------
+        // 2. QUALITY ANALYSIS
+        // -----------------------------
+        stage('SonarQube Code Scan') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'sonar-scanner'
+                }
+            }
+        }
+
+        // -----------------------------
+        // 3. BUILD
+        // -----------------------------
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
+        // -----------------------------
+        // 4. DEPLOY
+        // -----------------------------
         stage('Run Docker Container') {
             steps {
-                // Stop and remove old container if it exists
                 sh '''
                     docker stop $CONTAINER_NAME || true
                     docker rm $CONTAINER_NAME || true
+                    docker run -d -p $PORT:80 --name $CONTAINER_NAME $IMAGE_NAME
                 '''
-                // Run new container on port 84
-                sh 'docker run -d -p $PORT:80 --name $CONTAINER_NAME $IMAGE_NAME'
             }
         }
     }
