@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kanban-deployment
+  labels:
+    app: kanban
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kanban
+  template:
+    metadata:
+      labels:
+        app: kanban
+    spec:
+      containers:
+        - name: kanban-app
+          image: <ECR_IMAGE>  # Replaced dynamically in Jenkins pipeline
+          ports:
+            - containerPort: 80
