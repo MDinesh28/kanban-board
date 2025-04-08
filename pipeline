@@ -5,6 +5,9 @@ pipeline {
         IMAGE_NAME = "kanban-board"
         CONTAINER_NAME = "kanban-container"
         PORT = "84"
+        ECR_REPO = "864899838867.dkr.ecr.ap-south-1.amazonaws.com/kanban"
+        AWS_REGION = "ap-south-1"
+
     }
 
     stages {
@@ -67,9 +70,26 @@ pipeline {
     }
 }
 
+// -----------------------------
+// 5. PUSH TO ECR
+// -----------------------------
+stage('Push to ECR') {
+    steps {
+        script {
+            // Authenticate Docker to ECR
+            sh 'aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO'
+
+            // Tag the image for ECR
+            sh 'docker tag $IMAGE_NAME:latest $ECR_REPO:latest'
+
+            // Push the image
+            sh 'docker push $ECR_REPO:latest'
+        }
+    }
+}
 
         // -----------------------------
-        // 5. DEPLOY
+        // 6. DEPLOY
         // -----------------------------
         stage('Run Docker Container') {
             steps {
